@@ -1,0 +1,12 @@
+dependencies {
+	//mina
+	compile group: 'org.apache.mina', name: 'mina-core', version: '2.0.16'
+
+	//logback
+	compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.8'
+
+	//commons
+	compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.5'
+
+}
+

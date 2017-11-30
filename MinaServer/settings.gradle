@@ -1,0 +1,2 @@
+rootProject.name = 'MinaServer'
+includeFlat 'MinaCommon', 'MinaAuth', 'MinaGame'
