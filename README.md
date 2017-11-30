@@ -1,0 +1,2 @@
+# MyMinaServer
+mina game server
