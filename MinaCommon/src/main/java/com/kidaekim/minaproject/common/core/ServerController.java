@@ -1,14 +1,9 @@
 package com.kidaekim.minaproject.common.core;
 
-import java.net.InetSocketAddress;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.mina.core.buffer.IoBuffer;
-import org.apache.mina.core.service.IoAcceptor;
-import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
-import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +16,8 @@ import com.kidaekim.minaproject.common.net.Protocol;
  * @author kkd
  *
  */
-public class ServerController {
+public class ServerController implements MinaServerListener{
+	protected static Logger logger = LoggerFactory.getLogger(ServerController.class);
 	private volatile static ServerController controller;
 	private ServerController() {}
 
@@ -36,31 +32,23 @@ public class ServerController {
 		return controller;
 	}
 
-	private static Logger logger = LoggerFactory.getLogger(ServerController.class);
+	protected ConcurrentHashMap<Integer, MinaServer> servers = new ConcurrentHashMap<Integer, MinaServer>();//serverIndex, MinaServer
 
-	private IoAcceptor acceptor;
-	private ConcurrentHashMap<Integer, MinaServer> servers = new ConcurrentHashMap<Integer, MinaServer>();//serverIndex, MinaServer
+	private MinaServerSocket minaServerSocket;
 
-	/**
-	 * bind min server
-	 */
-	public void bindAcceptor(){
-		try {
-			acceptor = new NioSocketAcceptor();
-        	//acceptor.getFilterChain().addLast( "logger", new LoggingFilter() );
-	        //acceptor.getFilterChain().addLast( "codec", new ProtocolCodecFilter( new TextLineCodecFactory( Charset.forName( "UTF-8" ))));
+	public void bindServer() throws Exception {
+		//TODO 설정 파일로
+		minaServerSocket = new MinaServerSocket(this);
 
-        	acceptor.setHandler( new MinsServerHandler() );
-        	acceptor.getSessionConfig().setReadBufferSize( 2048 );
-        	acceptor.getSessionConfig().setIdleTime( IdleStatus.BOTH_IDLE, 1 );
+		minaServerSocket.setProcessorCount(4);
+		minaServerSocket.setCorePoolSize(100);
+		minaServerSocket.setMaximumPoolSize(300);
 
-        	acceptor.bind( new InetSocketAddress(9090) );
+		minaServerSocket.setReadBufferSize(2048);
+		minaServerSocket.setBothIdleTime(10);
 
-    		logger.info("acceptor bind success");
-		}catch(Exception e) {
-			if(acceptor != null) try{acceptor.dispose();}catch (Exception e2) {}
-    		logger.error("acceptor bind fail. {}", ExceptionUtils.getStackTrace(e));
-		}
+		minaServerSocket.setPort(9090);
+		minaServerSocket.bind();
 	}
 
 	/**
@@ -74,51 +62,38 @@ public class ServerController {
 		logger.info("{} server {} start success", minaServer.getMinaServerType(), minaServer.hashCode());
 	}
 
-	/**
-	 * receiveEvent 
-	 * @param handleEvent
-	 * @param session
-	 * @param buffer
-	 * @throws Exception 
-	 */
-	public void receiveEvent(HandleEvent handleEvent, IoSession session, IoBuffer buffer) throws Exception {
+	@Override
+	public void receiveHandleEvent(MinaServerType minaServerType, int serverIndex, HandleEvent handleEvent, IoSession session, IoBuffer buffer) throws Exception {
+		MinaServer minaServer = null;
 		switch(handleEvent) {
 			case LOGIN :
-				MinaServerType minaServerType = MinaServerType.getEnum(buffer.get());
-				if(minaServerType == null) {
-					throw new Exception("unknown minaServerType");//TODO LoginException
-				}
-				MinaServer minaServer;
 				if(minaServerType == MinaServerType.GAME) {
-					int serverIndex = buffer.getInt();
 					minaServer = servers.get(serverIndex);
-					if(minaServer == null) {
-						throw new Exception("unknown serverIndex");//TODO LoginException
-					}
 				}else {
 					//random server
 					minaServer = null;
 				}
-				minaServer.receiveEvent(handleEvent, session, buffer);
 				break;
 			case LOGOUT :
-				
-				break;
-			case REQUEST :
-				//protocol
-				short proto = buffer.getShort();
-				Protocol protocol = Protocol.getProtocol(proto);
-				if(protocol == null) {
-					logger.error("unknown protocol code: {}", proto);
-					session.closeNow();
-					return;
-				}
+				//session minaServer
 				break;
 			default : 
 				logger.error("messageReceived fail. bad handleEvent :{}", handleEvent.getValue());
 				session.closeNow();
 				return;
 		}
+		if(minaServer == null) {
+			//TODO message send to session 
+			throw new Exception("minaServer is null");
+		}
+		minaServer.receiveEvent(handleEvent, session, buffer);
+	}
+
+	@Override
+	public void receiveRequestEvent(Protocol protocol, IoSession session, IoBuffer buffer) {
+		
+		
+		
 	}
 
 }

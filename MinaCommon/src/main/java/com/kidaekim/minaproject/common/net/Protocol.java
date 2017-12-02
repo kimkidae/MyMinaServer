@@ -6,6 +6,7 @@ import java.util.Map;
 public class Protocol {
 	public static final Protocol LOGIN_REQUEST = new Protocol(1, "로그인 요청");
 	
+	
 
 	private static Map<Short, Protocol> protocols = new HashMap<Short, Protocol>();
 
