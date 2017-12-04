@@ -8,8 +8,6 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kidaekim.minaproject.common.enums.HandleEvent;
-import com.kidaekim.minaproject.common.enums.MinaServerType;
 import com.kidaekim.minaproject.common.net.Protocol;
 
 public class MinaServerHandler implements IoHandler {
@@ -27,12 +25,12 @@ public class MinaServerHandler implements IoHandler {
 
 	@Override
 	public void sessionOpened(IoSession session) throws Exception {
-//		logger.info("sessionOpened");
+		logger.info("sessionOpened");
 	}
 
 	@Override
 	public void sessionClosed(IoSession session) throws Exception {
-//		logger.info("sessionClosed");
+		logger.info("sessionClosed");
 	}
 
 	@Override
@@ -62,34 +60,16 @@ public class MinaServerHandler implements IoHandler {
 				session.closeNow();//TODO session manage
 				return;
 			}
+
 			IoBuffer buffer = (IoBuffer)message;
-			HandleEvent handleEvent = HandleEvent.getEnum(buffer.get());
-			if(handleEvent == null) {
-				buffer.position(buffer.position()-1);
-				logger.error("messageReceived fail. unknown handleEvent : {}", buffer.get());
+			Protocol protocol = Protocol.getProtocol(buffer.getShort());
+			if(protocol == null) {
+				buffer.position(buffer.position()-2);
+				logger.error("messageReceived fail. unknown protocol : {}", buffer.getShort());
 				session.closeNow();//TODO session manage
 				return;
 			}
-			if(handleEvent == HandleEvent.REQUEST) {
-				Protocol protocol = Protocol.getProtocol(buffer.getShort());
-				if(protocol == null) {
-					buffer.position(buffer.position() - 2);
-					logger.error("messageReceived fail. unknown protocol :{}", buffer.getShort());
-					session.closeNow();//TODO session manage
-					return;
-				}
-				minaServerListener.receiveRequestEvent(protocol, session, buffer);
-			}else {
-				MinaServerType minaServerType = MinaServerType.getEnum(buffer.get());
-				if(minaServerType == null) {
-					buffer.position(buffer.position() - 1);
-					logger.error("messageReceived fail. unknown minaServerType :{}", buffer.get());
-					session.closeNow();//TODO session manage
-					return;
-				}
-				int serverIndex = buffer.getInt();
-				minaServerListener.receiveHandleEvent(minaServerType, serverIndex, handleEvent, session, buffer);
-			}
+			minaServerListener.receiveRequestEvent(protocol, session, buffer);
 		}catch(Exception e) {
 			logger.error(ExceptionUtils.getStackTrace(e));
 			session.closeNow();//TODO session manage

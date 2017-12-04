@@ -4,9 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Protocol {
-	public static final Protocol LOGIN_REQUEST = new Protocol(1, "로그인 요청");
-	
-	
+	public static final Protocol USER_LOGIN = new Protocol(1, "로그인 요청");
 
 	private static Map<Short, Protocol> protocols = new HashMap<Short, Protocol>();
 
