@@ -1,12 +1,25 @@
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.9.RELEASE")
+	}
+}
 
 allprojects {
-  apply plugin: "java"
-
-  version = 1.0
+  apply plugin: 'java'
+  apply plugin: 'eclipse'
+  apply plugin: 'idea'
+  apply plugin: 'org.springframework.boot'
 
   repositories {
       mavenCentral()
   }
+
+  version = 1.0
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
 }
 
 subprojects {

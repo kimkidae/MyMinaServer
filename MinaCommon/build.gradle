@@ -2,11 +2,22 @@ dependencies {
 	//mina
 	compile group: 'org.apache.mina', name: 'mina-core', version: '2.0.16'
 
-	//logback
-	compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.8'
-
 	//commons
 	compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.5'
 
+	//logback
+	compile group: 'ch.qos.logback', name: 'logback-classic'
+
+	//spring context
+	compile group: 'org.springframework', name: 'spring-context'
+
+	//spring boot
+	compile group: 'org.springframework.boot', name: 'spring-boot-starter'
+
+	//spring web
+	compile("org.springframework.boot:spring-boot-starter-web")
+
+	//spring redis
+	compile("org.springframework.boot:spring-boot-starter-data-redis")
 }
 
